@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>💎 QR Ganador</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+    body {
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #ff0080, #7928ca, #0078ff);
+      background-size: 400% 400%;
+      animation: gradientMove 10s ease infinite;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+      text-align: center;
+    }
+    @keyframes gradientMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .card {
+      background: rgba(255,255,255,0.12);
+      border: 2px solid rgba(255,255,255,0.25);
+      border-radius: 25px;
+      padding: 30px;
+      max-width: 420px;
+      box-shadow: 0 0 40px rgba(255,255,255,0.2);
+      backdrop-filter: blur(12px);
+      animation: fadeIn 1s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    h2 {
+      margin-bottom: 10px;
+      font-weight: 600;
+      background: linear-gradient(90deg, #fff, #ffd700, #ff8c00);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    input {
+      padding: 12px;
+      width: 90%;
+      border: none;
+      border-radius: 12px;
+      margin-top: 10px;
+      font-size: 16px;
+      text-align: center;
+      outline: none;
+      background: rgba(255,255,255,0.8);
+      color: #333;
+      transition: 0.3s;
+    }
+    input:focus { background: #fff; }
+    button {
+      margin-top: 20px;
+      padding: 12px 28px;
+      background: linear-gradient(90deg, #00ffcc, #00aaff);
+      color: #fff;
+      font-weight: bold;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: 0.3s;
+      box-shadow: 0 0 12px rgba(0,0,0,0.3);
+    }
+    button:hover {
+      transform: scale(1.05);
+      background: linear-gradient(90deg, #ff0080, #ff6600);
+    }
+    #qrcode {
+      margin-top: 20px;
+      background: white;
+      padding: 10px;
+      border-radius: 12px;
+      filter: blur(6px);
+      transition: filter 0.6s;
+    }
+    .locked { filter: blur(6px); }
+    .unlocked { filter: none; }
+    .pay-box {
+      background: rgba(255,255,255,0.25);
+      border-radius: 15px;
+      padding: 15px;
+      margin-top: 15px;
+      box-shadow: 0 0 20px rgba(255,255,255,0.15);
+    }
+    .pay-box img {
+      width: 200px;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+    .small {
+      font-size: 13px;
+      opacity: 0.9;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>💎 Tu QR Ganador</h2>
+
+    <div id="formSection">
+      <p>Ingresa tu nombre para crear tu QR</p>
+      <input type="text" id="nameInput" placeholder="Tu nombre aquí">
+      <button onclick="generateQR()">✨ Generar QR</button>
+    </div>
+
+    <div id="qrSection" style="display:none;">
+      <div id="qrcode" class="locked"></div>
+      <p class="small">🔒 QR bloqueado — paga S/5 para activarlo</p>
+
+      <div class="pay-box" id="paySection">
+        <p>📱 Escanea y paga con Yape (S/5)</p>
+        <img src="yape.jpeg" alt="QR Yape">
+        <p class="small">Luego sube tu comprobante (imagen o captura)</p>
+
+        <input type="file" id="comprobante" accept="image/*">
+        <button onclick="mostrarConfirmacion()">📤 Enviar comprobante</button>
+        <p class="small">Recibirás confirmación cuando se valide tu pago ✅</p>
+      </div>
+
+      <div id="shareSection" style="display:none;">
+        <h3>🎉 ¡QR Activado!</h3>
+        <p>Comparte tu enlace y gana S/3.50 por cada persona que se una.</p>
+        <input type="text" id="shareLink" readonly style="width:100%;margin-top:10px;">
+        <button onclick="copyLink()">📋 Copiar enlace</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  const urlBase = "http://localhost/qr"; // Cambia si subes a servidor
+  const scriptURL = "https://script.google.com/macros/s/AKfycbzp27p1eikYo2nWne6iv801FrSpPEVepSl5F7QBGGre41CxyH9EDW1o0x8xloWlRVqc/exec";
+
+  function generateQR() {
+    const name = document.getElementById("nameInput").value.trim();
+    if (!name) return alert("Por favor, ingresa tu nombre");
+
+    const code = name.replace(/\s+/g, "_").toLowerCase();
+    const link = `${urlBase}?ref=${code}`;
+
+    document.getElementById("formSection").style.display = "none";
+    document.getElementById("qrSection").style.display = "block";
+
+    const qrContainer = document.getElementById("qrcode");
+    qrContainer.innerHTML = "";
+    new QRCode(qrContainer, {
+      text: link,
+      width: 200,
+      height: 200,
+      colorDark: "#000",
+      colorLight: "#fff"
+    });
+
+    document.getElementById("shareLink").value = link;
+  }
+
+  async function mostrarConfirmacion() {
+    const nombre = document.getElementById("nameInput").value.trim();
+    const fileInput = document.getElementById("comprobante");
+    const file = fileInput.files[0];
+
+    if (!file) return alert("📸 Sube una imagen del comprobante");
+    if (!nombre) return alert("📝 Ingresa tu nombre primero");
+
+    // Convertir imagen a base64
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+      const base64 = e.target.result;
+
+      try {
+        const res = await fetch(scriptURL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            nombre: nombre,
+            comprobante: base64
+          })
+        });
+
+        const text = await res.text();
+        if (text === "OK") {
+          alert("✅ Pago registrado correctamente en Google Sheets");
+          desbloquearQR();
+        } else {
+          alert("⚠️ Error al registrar el pago: " + text);
+        }
+      } catch (err) {
+        alert("❌ Error al conectar con Google Sheets");
+        console.error(err);
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function desbloquearQR() {
+    const qr = document.getElementById("qrcode");
+    qr.classList.remove("locked");
+    qr.classList.add("unlocked");
+    document.getElementById("paySection").style.display = "none";
+    document.getElementById("shareSection").style.display = "block";
+  }
+
+  function copyLink() {
+    const link = document.getElementById("shareLink");
+    link.select();
+    document.execCommand("copy");
+    alert("Enlace copiado ✅");
+  }
+</script>
+
+</body>
+</html>
